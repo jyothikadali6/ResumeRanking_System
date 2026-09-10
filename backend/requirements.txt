@@ -1,0 +1,15 @@
+# Minimum-version floors (not hard pins) so pip can resolve wheels for your
+# installed Python version. Tested with Python 3.10–3.14.
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy>=2.0.36
+psycopg2-binary>=2.9.10
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+python-multipart>=0.0.19
+PyMuPDF>=1.24.0
+spacy>=3.8.0
+sentence-transformers>=3.3.0
+faiss-cpu>=1.12.0
+numpy>=1.26.0
+httpx>=0.28.0
