@@ -1,18 +1,22 @@
 # Render Blueprint — backend web service + managed Postgres.
 # Deploy: push to GitHub, then in Render click "New +" -> "Blueprint" and
 # point it at this repo. Render reads this file and provisions everything.
+#
+# NOTE: This uses Render's FREE plans (no card required). Trade-offs:
+#   - 512MB RAM: the ML stack (torch) is tight and MAY crash on large batches.
+#     If ranking fails with out-of-memory, upgrade `plan` to `starter`.
+#   - No persistent disk on free tier: the embedding model re-downloads on each
+#     cold start, and uploaded PDFs don't survive restarts (fine for a single
+#     upload -> rank session).
+#   - Free Postgres expires ~30 days after creation.
 services:
   - type: web
     name: resume-ranker-api
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    plan: starter            # 512MB RAM free-ish tier is too small for torch; use starter (0.5 CPU / 512MB) or standard
+    plan: free
     healthCheckPath: /api/health
-    disk:
-      name: model-cache
-      mountPath: /data       # persists downloaded embedding models across deploys
-      sizeGB: 2
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -26,7 +30,7 @@ services:
       - key: SPACY_MODEL
         value: en_core_web_sm
       - key: UPLOAD_DIR
-        value: /data/uploads
+        value: /tmp/uploads
       - key: SEMANTIC_WEIGHT
         value: "0.7"
       - key: SKILL_WEIGHT
@@ -38,5 +42,5 @@ services:
 
 databases:
   - name: resume-ranker-db
-    plan: basic-256mb        # smallest managed Postgres; bump if you need more
+    plan: free
     databaseName: resume_ranker
