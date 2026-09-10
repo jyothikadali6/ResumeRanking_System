@@ -1,0 +1,42 @@
+# Render Blueprint — backend web service + managed Postgres.
+# Deploy: push to GitHub, then in Render click "New +" -> "Blueprint" and
+# point it at this repo. Render reads this file and provisions everything.
+services:
+  - type: web
+    name: resume-ranker-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter            # 512MB RAM free-ish tier is too small for torch; use starter (0.5 CPU / 512MB) or standard
+    healthCheckPath: /api/health
+    disk:
+      name: model-cache
+      mountPath: /data       # persists downloaded embedding models across deploys
+      sizeGB: 2
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resume-ranker-db
+          property: connectionString
+      # Ollama is not available on Render — run without the LLM (graceful fallback).
+      - key: USE_LLM
+        value: "false"
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
+      - key: SPACY_MODEL
+        value: en_core_web_sm
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: SEMANTIC_WEIGHT
+        value: "0.7"
+      - key: SKILL_WEIGHT
+        value: "0.3"
+      # IMPORTANT: set this to your Vercel URL after the frontend is deployed,
+      # e.g. https://resume-ranking-system.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
+
+databases:
+  - name: resume-ranker-db
+    plan: basic-256mb        # smallest managed Postgres; bump if you need more
+    databaseName: resume_ranker

@@ -1,5 +1,10 @@
-// Thin API client. Uses the Vite dev proxy (/api -> http://localhost:8000).
-const BASE = "/api";
+// Thin API client.
+// - Dev: VITE_API_URL is unset, so BASE = "/api" and the Vite proxy forwards
+//   to http://localhost:8000 (see vite.config.js).
+// - Prod (Vercel): set VITE_API_URL to the backend origin, e.g.
+//   https://resume-ranker-api.onrender.com  -> BASE becomes ".../api".
+const API_ROOT = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "";
+const BASE = `${API_ROOT}/api`;
 
 async function handle(res) {
   if (!res.ok) {
